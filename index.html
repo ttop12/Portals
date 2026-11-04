@@ -1,5 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>College Portal Tracker</title>
-<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="theme-color" content="#F7F8FA" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111317" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Portals">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icon-180.png">
 <style>
 /* Layout: a plain grouped list (Reach / Target / Safety) like a phone settings screen, with a sticky search bar and one progress line. */
 :root {
@@ -17,7 +30,6 @@
 }
 * { box-sizing: border-box; }
 body { background: var(--bg); color: var(--ink); font: 16px/1.45 var(--f); -webkit-font-smoothing: antialiased; }
-body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
 .wrap { max-width: 680px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 28px 72px; }
 h1, h2 { margin: 0; text-wrap: balance; }
 button, input, select { font: inherit; color: inherit; }
@@ -43,7 +55,7 @@ h1 { font-size: 30px; font-weight: 700; letter-spacing: -.015em; line-height: 1.
 .results button[aria-selected="true"], .results button:hover { background: var(--hover); }
 .results button small { color: var(--link); font-size: 14px; white-space: nowrap; }
 .segmented { display: flex; background: var(--press); padding: 2px; border-radius: 8px; }
-.segmented button { flex: 1; border: 0; background: none; padding: 6px 8px; border-radius: 6px; font-size: 14px; cursor: pointer; color: var(--muted); }
+.segmented button { flex: 1 1 auto; border: 0; background: none; padding: 6px 6px; border-radius: 6px; font-size: 14px; cursor: pointer; color: var(--muted); white-space: nowrap; }
 .segmented button:hover { color: var(--ink); }
 .segmented button[aria-pressed="true"] { background: var(--field); color: var(--ink); font-weight: 600; box-shadow: 0 1px 2px rgb(0 0 0 / .12); }
 
@@ -62,6 +74,15 @@ h1 { font-size: 30px; font-weight: 700; letter-spacing: -.015em; line-height: 1.
 .check input:checked + .box { background: var(--done); border-color: var(--done); }
 .check input:checked + .box svg { opacity: 1; }
 .check input:focus-visible + .box { outline: 2px solid var(--link); outline-offset: 2px; }
+.check.finish input:checked + .box { background: var(--link); border-color: var(--link); }
+.check.finish .box svg { color: var(--link-ink); }
+.checks { display: flex; gap: 10px; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 13px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 14px; height: 14px; border-radius: 4px; display: inline-grid; place-items: center; background: var(--done); }
+.legend i.finish { background: var(--link); }
+.legend i svg { width: 10px; height: 10px; color: #fff; }
+.legend i.finish svg { color: var(--link-ink); }
 .name { flex: 1; min-width: 0; padding: 14px 0; color: var(--ink); text-decoration: none; overflow-wrap: anywhere; }
 a.name:hover { color: var(--link); text-decoration: underline; text-underline-offset: 3px; }
 a.name:active { opacity: .7; }
@@ -81,6 +102,9 @@ a.name:active { opacity: .7; }
 .editor { display: grid; grid-template-columns: 1fr 150px; gap: 12px; }
 .field { display: grid; gap: 4px; min-width: 0; }
 .field.wide { grid-column: 1 / -1; }
+.field.inline { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.field.inline input { width: 18px; height: 18px; margin: 0; accent-color: var(--done); }
+.field.inline > span { font-size: 15px; color: var(--ink); }
 .field > span { font-size: 13px; color: var(--muted); }
 .field input, .field select { width: 100%; min-width: 0; padding: 9px 11px; border: 1px solid var(--line); border-radius: 6px; background: var(--field); }
 .field input:hover, .field select:hover { border-color: var(--muted); }
@@ -93,37 +117,94 @@ a.name:active { opacity: .7; }
 @media (max-width: 480px) { .editor { grid-template-columns: 1fr; } h1 { font-size: 26px; } }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
-
+<style>
+html { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body { margin: 0; }
+[hidden] { display: none !important; }
+.signin { padding-top: 12vh; display: grid; gap: 14px; justify-items: start; }
+.signin p { margin: 0; color: var(--muted); max-width: 40ch; }
+.google { display: inline-flex; align-items: center; gap: 10px; border: 1px solid var(--line); background: var(--field); padding: 10px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; }
+.google:hover { border-color: var(--muted); }
+.google:active { opacity: .8; }
+.foot { margin-top: 36px; display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: center; color: var(--muted); font-size: 14px; }
+.foot .tbtn { font-size: 14px; padding: 4px 8px; }
+</style>
+</head>
+<body>
 <div class="wrap">
   <header>
     <h1>College Portal Tracker</h1>
-    <div class="progress">
+    <div class="progress" id="progress" hidden>
       <div class="progress-label"><span id="progress-text">Loading your colleges…</span><span id="progress-sub"></span></div>
       <div class="bar"><i id="bar"></i></div>
     </div>
   </header>
 
-  <div class="toolbar">
-    <div class="search">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-      <input id="search" type="search" placeholder="Add a college" autocomplete="off" aria-label="Search for a college to add">
-      <div class="results" id="results" role="listbox" hidden></div>
-    </div>
-    <div class="segmented" role="group" aria-label="Show">
-      <button data-filter="all" aria-pressed="true">All</button>
-      <button data-filter="todo" aria-pressed="false">Not logged in</button>
-      <button data-filter="done" aria-pressed="false">Logged in</button>
-    </div>
-  </div>
+  <section class="signin" id="signin" hidden>
+    <p id="signin-text">Sign in with the same Google account on your phone and PC, and your checkmarks stay in sync.</p>
+    <button class="google" id="google-btn" type="button">
+      <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>
+      Sign in with Google
+    </button>
+  </section>
 
-  <main id="list">
-    <p class="empty">Your colleges will show up here. Search above to add one.</p>
-  </main>
+  <div id="app" hidden>
+    <div class="toolbar">
+      <div class="search">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="search" type="search" placeholder="Add a college" autocomplete="off" aria-label="Search for a college to add">
+        <div class="results" id="results" role="listbox" hidden></div>
+      </div>
+      <div class="segmented" role="group" aria-label="Show">
+        <button data-filter="all" aria-pressed="true">All</button>
+        <button data-filter="applied" aria-pressed="false">Applied</button>
+        <button data-filter="todo" aria-pressed="false">Not logged in</button>
+        <button data-filter="done" aria-pressed="false">Logged in</button>
+      </div>
+      <div class="legend" aria-hidden="true">
+        <span><i class="login-key"></i>Logged into portal</span>
+        <span><i class="finish"></i>Finished everything in portal</span>
+      </div>
+    </div>
+
+    <main id="list">
+      <p class="empty">Loading your colleges…</p>
+    </main>
+    <div class="foot"><span id="who"></span><button class="tbtn" id="signout" type="button">Sign out</button></div>
+  </div>
   <div class="note" id="note" hidden></div>
 </div>
 
-<script>
+<script type="module">
+import { firebaseConfig } from "./firebase-config.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithRedirect, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { initializeFirestore, persistentLocalCache, collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc, getDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
 const COLLEGE_NAMES = ["Arizona State University","Auburn University","Babson College","Barnard College","Baylor University","Boston College","Boston University","Bowdoin College","Brandeis University","Brown University","Bucknell University","California Institute of Technology","Carleton College","Carnegie Mellon University","Case Western Reserve University","Clemson University","Colby College","Colgate University","College of Charleston","College of William & Mary","Colorado School of Mines","Colorado State University","Columbia University","Cornell University","Dartmouth College","Davidson College","Drexel University","Duke University","Elon University","Emory University","Florida A&M University","Florida International University","Florida State University","Fordham University","George Mason University","George Washington University","Georgetown University","Georgia State University","Georgia Tech","Gonzaga University","Hamilton College","Harvard University","Harvey Mudd College","Howard University","Indiana University Bloomington","Iowa State University","James Madison University","Johns Hopkins University","Kansas State University","Lehigh University","Louisiana State University","Loyola Marymount University","Loyola University Chicago","Marquette University","Massachusetts Institute of Technology","Miami University (Ohio)","Michigan State University","Middlebury College","Mississippi State University","New York University","North Carolina State University","Northeastern University","Northwestern University","Ohio State University","Oklahoma State University","Oregon State University","Penn State University","Pepperdine University","Pomona College","Princeton University","Purdue University","Rensselaer Polytechnic Institute","Rice University","Rochester Institute of Technology","Rutgers University","San Diego State University","Santa Clara University","Southern Methodist University (SMU)","Spelman College","Stanford University","Stevens Institute of Technology","Swarthmore College","Syracuse University","Temple University","Texas A&M University","Texas Christian University (TCU)","Texas State University","Texas Tech University","The University of Alabama","Tufts University","Tulane University","UC Berkeley","UC Davis","UC Irvine","UC San Diego","UC Santa Barbara","UCLA","University of Arizona","University of Arkansas","University of Central Florida","University of Chicago","University of Cincinnati","University of Colorado Boulder","University of Connecticut","University of Delaware","University of Denver","University of Florida","University of Georgia","University of Houston","University of Illinois Urbana-Champaign","University of Iowa","University of Kansas","University of Kentucky","University of Maryland","University of Massachusetts Amherst","University of Miami","University of Michigan","University of Minnesota","University of Mississippi","University of Missouri","University of Nebraska-Lincoln","University of North Carolina at Chapel Hill","University of North Florida","University of North Texas","University of Notre Dame","University of Oklahoma","University of Oregon","University of Pennsylvania","University of Pittsburgh","University of Rochester","University of San Diego","University of South Carolina","University of South Florida","University of Southern California","University of Tennessee","University of Texas at Austin","University of Texas at Dallas","University of Texas at San Antonio","University of Utah","University of Vermont","University of Virginia","University of Washington","University of Wisconsin-Madison","Vanderbilt University","Villanova University","Virginia Tech","Wake Forest University","Washington University in St. Louis","Wellesley College","Wesleyan University","West Virginia University","Williams College","Yale University"];
+
+// Your starting list, added the first time you sign in.
+const SEED = [
+  ["ut-austin", "UT Austin", "reach", "https://utdirect.utexas.edu/apps/adm/mystatus/"],
+  ["umich", "University of Michigan", "reach", "https://enrollmentconnect.umich.edu/apply/status"],
+  ["unc", "UNC Chapel Hill", "reach", "https://applynow.unc.edu/apply/status"],
+  ["georgia-tech", "Georgia Tech", "reach", "https://application.gatech.edu/apply/status"],
+  ["miami", "University of Miami", "reach", "https://apply.miami.edu/apply/status"],
+  ["uf", "University of Florida", "reach", "https://one.uf.edu/"],
+  ["fsu", "Florida State University", "reach", "https://apply.fsu.edu/apply/status"],
+  ["georgia-state", "Georgia State University", "reach", "https://undergradapply.gsu.edu/apply/status"],
+  ["vanderbilt", "Vanderbilt University", "reach", "https://myappvu.vanderbilt.edu/portal/status"],
+  ["smu", "SMU", "target", "https://admission.smu.edu/apply/status"],
+  ["ohio-state", "Ohio State University", "target", "https://appstatus.osu.edu/"],
+  ["texas-tech", "Texas Tech", "target", "https://texastech.my.site.com/portal/TX_SiteLogin?startURL=%2Fportal%2FTargetX_Base__Portal"],
+  ["tcu", "TCU", "target", "https://my.tcu.edu/"],
+  ["usf", "University of South Florida", "target", "https://discover.usf.edu/apply/status"],
+  ["texas-am", "Texas A&M", "target", "https://applicant.tamu.edu/"],
+  ["nc-state", "NC State", "target", "https://apply.ncsu.edu/portal/wolfpaw"],
+  ["oklahoma", "University of Oklahoma", "safety", "https://hello.ou.edu/apply/status"],
+  ["asu", "Arizona State University", "safety", "https://my.asu.edu/"],
+  ["oklahoma-state", "Oklahoma State University", "safety", "https://orange.okstate.edu/account/"],
+];
 
 const TIERS = [["reach","Reach"],["target","Target"],["safety","Safety"],["other","Other"]];
 const $ = (id) => document.getElementById(id);
@@ -131,10 +212,13 @@ const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "
 const safeUrl = (u) => /^https?:\/\//i.test(u || "") ? u : "";
 const slug = (s) => s.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60) || "college";
 
-let db = null, colleges = [], filter = "all", loaded = false;
+let colRef = null, unsub = null, colleges = [], filter = "all", loaded = false;
 let editingId = null, draft = null, removeArmed = false, focusEditor = false;
 
 const CHECK_SVG = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg>';
+const FLAG_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4"/><path d="M5 4h12l-2.5 4.5L17 13H5" fill="currentColor"/></svg>';
+document.querySelector(".legend i.login-key").innerHTML = CHECK_SVG;
+document.querySelector(".legend i.finish").innerHTML = FLAG_SVG;
 
 function rowHtml(c) {
   if (c.id === editingId) return editorHtml(c);
@@ -143,19 +227,23 @@ function rowHtml(c) {
     ? `<a class="name" href="${esc(url)}" target="_blank" rel="noopener">${esc(c.name)}<span class="arrow" aria-hidden="true">↗</span></a>`
     : `<span class="name">${esc(c.name)}</span>`;
   const action = url ? `<button class="tbtn" data-act="edit">Edit</button>` : `<button class="tbtn link" data-act="edit">Add portal link</button>`;
-  return `<li class="row${c.loggedIn ? " done" : ""}" data-id="${esc(c.id)}">
-    <label class="check" title="Logged into portal"><input type="checkbox" id="chk-${esc(c.id)}" data-act="toggle" ${c.loggedIn ? "checked" : ""} aria-label="Logged into ${esc(c.name)} portal"><span class="box">${CHECK_SVG}</span></label>
+  return `<li class="row${c.finished ? " done" : ""}" data-id="${esc(c.id)}">
+    <div class="checks">
+      <label class="check" title="Logged into portal"><input type="checkbox" id="chk-${esc(c.id)}" data-act="toggle" data-field="loggedIn" ${c.loggedIn ? "checked" : ""} aria-label="Logged into ${esc(c.name)} portal"><span class="box">${CHECK_SVG}</span></label>
+      <label class="check finish" title="Finished everything in portal"><input type="checkbox" id="fin-${esc(c.id)}" data-act="toggle" data-field="finished" ${c.finished ? "checked" : ""} aria-label="Finished everything in ${esc(c.name)} portal"><span class="box">${FLAG_SVG}</span></label>
+    </div>
     ${name}${action}
   </li>`;
 }
 
 function editorHtml(c) {
-  const d = draft || { name: c.name, tier: c.tier || "other", portalUrl: c.portalUrl || "" };
+  const d = draft || { name: c.name, tier: c.tier || "other", portalUrl: c.portalUrl || "", applied: !!c.applied };
   return `<li class="row editing" data-id="${esc(c.id)}">
     <form class="editor" data-act="save">
       <label class="field"><span>College name</span><input id="e-name" name="name" required value="${esc(d.name)}"></label>
       <label class="field"><span>Category</span><select id="e-tier" name="tier">${TIERS.map(([t, l]) => `<option value="${t}"${d.tier === t ? " selected" : ""}>${l}</option>`).join("")}</select></label>
       <label class="field wide"><span>Portal link</span><input id="e-portal" name="portalUrl" type="url" inputmode="url" placeholder="Paste the link from the school's email" value="${esc(d.portalUrl)}"></label>
+      <label class="field wide inline"><input type="checkbox" id="e-applied" name="applied"${d.applied ? " checked" : ""}><span>I've applied</span></label>
       <div class="editor-actions">
         <button type="submit" class="solid">Save</button>
         <button type="button" class="tbtn" data-act="cancel">Cancel</button>
@@ -168,17 +256,19 @@ function editorHtml(c) {
 
 function render() {
   const total = colleges.length, done = colleges.filter((c) => c.loggedIn).length;
+  const finished = colleges.filter((c) => c.finished).length;
   $("progress-text").textContent = !loaded ? "Loading your colleges…" : total ? `${done} of ${total} portals logged into` : "No colleges yet";
-  $("progress-sub").textContent = loaded && total ? (done === total ? "All done" : `${total - done} to go`) : "";
+  $("progress-sub").textContent = loaded && total ? `${finished} finished` : "";
   $("bar").style.width = total ? (done / total * 100) + "%" : "0";
 
-  const shown = colleges.filter((c) => c.id === editingId || filter === "all" || (filter === "done" ? c.loggedIn : !c.loggedIn));
+  const matches = { all: () => true, applied: (c) => c.applied, todo: (c) => !c.loggedIn, done: (c) => c.loggedIn }[filter];
+  const shown = colleges.filter((c) => c.id === editingId || matches(c));
   let html = "";
   for (const [tier, label] of TIERS) {
     const list = shown.filter((c) => (c.tier || "other") === tier);
     if (list.length) html += `<section class="group"><h2>${label}</h2><ul class="rows">${list.map(rowHtml).join("")}</ul></section>`;
   }
-  const emptyMsg = !loaded ? "Loading your colleges…" : !total ? "No colleges yet. Search above to add your first one." : filter === "todo" ? "You've logged into every portal." : "None yet.";
+  const emptyMsg = !loaded ? "Loading your colleges…" : !total ? "No colleges yet. Search above to add your first one." : filter === "todo" ? "You've logged into every portal." : filter === "applied" ? "No colleges marked as applied yet. Tap Edit on a school and tick \"I've applied.\"" : "None yet.";
   $("list").innerHTML = html || `<p class="empty">${esc(emptyMsg)}</p>`;
 
   if (focusEditor && editingId) {
@@ -225,13 +315,12 @@ async function pick(i) {
   $("search").value = ""; $("results").hidden = true; $("search").blur();
   const existing = colleges.find((c) => c.name.toLowerCase() === r.name.toLowerCase());
   if (existing) { startEdit(existing, true); return; }
-  if (!db) { showNote("Can't add colleges right now: the tracker isn't connected. Open it from claude.ai while signed in."); return; }
   let id = slug(r.name);
   if (colleges.some((c) => c.id === id)) id += "-" + Date.now().toString(36);
   if (filter !== "all") { filter = "all"; syncFilter(); }
   editingId = id; draft = null; removeArmed = false; focusEditor = true;
-  try { await db.collection("colleges").doc(id).set({ name: r.name, tier: "target", portalUrl: "", loggedIn: false, order: Date.now() }); showNote(""); }
-  catch (err) { editingId = null; render(); showNote(err?.code === "quota_exceeded" ? "Storage is full. Remove a college and try again." : "Couldn't add that college. Check your connection and try again."); }
+  try { await setDoc(doc(colRef, id), { name: r.name, tier: "target", portalUrl: "", loggedIn: false, order: Date.now() }); showNote(""); }
+  catch { editingId = null; render(); showNote("Couldn't add that college. Check your connection and try again."); }
 }
 
 /* ---------- List actions ---------- */
@@ -243,50 +332,94 @@ $("list").addEventListener("click", async (e) => {
   else if (el.dataset.act === "cancel") stopEdit();
   else if (el.dataset.act === "remove" && c) {
     if (!removeArmed) { removeArmed = true; render(); return; }
-    try { await db.collection("colleges").doc(id).delete(); stopEdit(); }
+    try { await deleteDoc(doc(colRef, id)); stopEdit(); }
     catch { showNote("Couldn't remove that college. Try again."); }
   }
 });
 $("list").addEventListener("input", (e) => {
   const form = e.target.closest(".editor"); if (!form) return;
-  draft = { name: form.elements.name.value, tier: form.elements.tier.value, portalUrl: form.elements.portalUrl.value };
+  draft = { name: form.elements.name.value, tier: form.elements.tier.value, portalUrl: form.elements.portalUrl.value, applied: form.elements.applied.checked };
 });
 $("list").addEventListener("keydown", (e) => { if (e.key === "Escape" && e.target.closest(".editor")) stopEdit(); });
 $("list").addEventListener("submit", async (e) => {
   e.preventDefault();
   const form = e.target, id = form.closest(".row").dataset.id;
-  if (!db) { showNote("Can't save right now: the tracker isn't connected."); return; }
   const name = form.elements.name.value.trim(); if (!name) return;
   let portal = form.elements.portalUrl.value.trim();
   if (portal && !/^https?:\/\//i.test(portal)) portal = "https://" + portal;
   form.querySelector(".solid").disabled = true;
-  try { await db.collection("colleges").doc(id).update({ name, tier: form.elements.tier.value, portalUrl: portal }); showNote(""); stopEdit(); }
+  try { await updateDoc(doc(colRef, id), { name, tier: form.elements.tier.value, portalUrl: portal, applied: form.elements.applied.checked }); showNote(""); stopEdit(); }
   catch { form.querySelector(".solid").disabled = false; showNote("Couldn't save that change. Check your connection and try again."); }
 });
 $("list").addEventListener("change", async (e) => {
   if (e.target.dataset.act !== "toggle") return;
   const id = e.target.closest(".row").dataset.id, val = e.target.checked;
-  const c = colleges.find((x) => x.id === id); if (c) { c.loggedIn = val; render(); }
-  if (!db) { showNote("Can't save right now: the tracker isn't connected."); return; }
-  try { await db.collection("colleges").doc(id).update({ loggedIn: val }); }
+  // Finishing a portal means you logged in; un-ticking "logged in" also clears "finished".
+  const patch = e.target.dataset.field === "finished"
+    ? (val ? { finished: true, loggedIn: true } : { finished: false })
+    : (val ? { loggedIn: true } : { loggedIn: false, finished: false });
+  const c = colleges.find((x) => x.id === id); if (c) { Object.assign(c, patch); render(); }
+  try { await updateDoc(doc(colRef, id), patch); }
   catch { showNote("Couldn't save that checkmark. Check your connection and try again."); }
 });
 
 function syncFilter() { document.querySelectorAll(".segmented button").forEach((x) => x.setAttribute("aria-pressed", x.dataset.filter === filter)); }
 document.querySelectorAll(".segmented button").forEach((b) => b.onclick = () => { filter = b.dataset.filter; syncFilter(); render(); });
 
-/* ---------- Data ---------- */
-render();
-(async () => {
-  db = window.claude?.use ? await window.claude.use("db") : null;
-  if (!db) { loaded = true; render(); showNote("Your saved colleges couldn't load. Open this page from claude.ai while signed in."); return; }
-  const timer = setTimeout(() => showNote("Still connecting… your list may be out of date."), 10000);
-  db.collection("colleges").onSnapshot((snap) => {
-    colleges = sortColleges(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
-    loaded = true;
-    if (editingId && !colleges.some((c) => c.id === editingId)) { editingId = null; draft = null; }
-    if (!snap.metadata.fromCache) { clearTimeout(timer); showNote(""); }
+/* ---------- Sign-in and sync ---------- */
+function showSignedOut(text) {
+  $("signin").hidden = false; $("app").hidden = true; $("progress").hidden = true;
+  if (text) $("signin-text").textContent = text;
+}
+
+if (!firebaseConfig.apiKey || firebaseConfig.apiKey.startsWith("PASTE")) {
+  showSignedOut("Setup isn't finished yet: the Firebase settings still need to be pasted into firebase-config.js.");
+  $("google-btn").hidden = true;
+} else {
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const fs = initializeFirestore(app, { localCache: persistentLocalCache() });
+  const provider = new GoogleAuthProvider();
+
+  $("google-btn").onclick = async () => {
+    showNote("");
+    try { await signInWithPopup(auth, provider); }
+    catch (err) {
+      if (["auth/popup-blocked", "auth/operation-not-supported-in-this-environment", "auth/cancelled-popup-request"].includes(err?.code)) {
+        try { await signInWithRedirect(auth, provider); } catch { showNote("Couldn't open Google sign-in. Try again."); }
+      } else if (err?.code !== "auth/popup-closed-by-user") showNote("Couldn't sign in. Try again.");
+    }
+  };
+  $("signout").onclick = () => signOut(auth);
+
+  onAuthStateChanged(auth, async (user) => {
+    if (unsub) { unsub(); unsub = null; }
+    colleges = []; loaded = false; editingId = null;
+    if (!user) { showSignedOut(); return; }
+    $("signin").hidden = true; $("app").hidden = false; $("progress").hidden = false;
+    $("who").textContent = user.email ? `Signed in as ${user.email}` : "Signed in";
     render();
-  }, () => { clearTimeout(timer); loaded = true; render(); showNote("Lost connection to your saved list. Reload the page to reconnect."); });
-})();
+
+    colRef = collection(fs, "users", user.uid, "colleges");
+    const metaRef = doc(fs, "users", user.uid);
+    try {
+      const meta = await getDoc(metaRef);
+      if (!meta.exists() || !meta.data().seeded) {
+        const batch = writeBatch(fs);
+        SEED.forEach(([id, name, tier, portalUrl], i) => batch.set(doc(colRef, id), { name, tier, portalUrl, loggedIn: false, order: i + 1 }));
+        batch.set(metaRef, { seeded: true }, { merge: true });
+        await batch.commit();
+      }
+    } catch { showNote("Couldn't reach your saved list. Check your connection."); }
+
+    unsub = onSnapshot(colRef, (snap) => {
+      colleges = sortColleges(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+      loaded = true;
+      if (editingId && !colleges.some((c) => c.id === editingId)) { editingId = null; draft = null; }
+      render();
+    }, () => { loaded = true; render(); showNote("Lost connection to your saved list. Reload the page to reconnect."); });
+  });
+}
 </script>
+</body>
+</html>
