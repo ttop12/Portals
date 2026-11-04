@@ -62,7 +62,9 @@ h1 { font-size: 30px; font-weight: 700; letter-spacing: -.015em; line-height: 1.
 /* List */
 .group { margin-top: 28px; }
 .group:first-child { margin-top: 8px; }
-.group h2 { font-size: 15px; font-weight: 600; color: var(--muted); padding: 0 8px 6px; }
+.group-head { display: flex; align-items: flex-end; gap: 12px; padding: 0 4px 6px 8px; }
+.group h2 { font-size: 15px; font-weight: 600; color: var(--ink); }
+.cols { flex: none; display: grid; grid-template-columns: 64px 44px; justify-items: center; font-size: 12px; line-height: 1.2; color: var(--muted); }
 .rows { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
 .row { display: flex; align-items: center; gap: 12px; padding: 0 4px 0 8px; border-bottom: 1px solid var(--line); min-height: 52px; }
 .row:not(.editing):hover { background: var(--hover); }
@@ -76,13 +78,9 @@ h1 { font-size: 30px; font-weight: 700; letter-spacing: -.015em; line-height: 1.
 .check input:focus-visible + .box { outline: 2px solid var(--link); outline-offset: 2px; }
 .check.finish input:checked + .box { background: var(--link); border-color: var(--link); }
 .check.finish .box svg { color: var(--link-ink); }
-.checks { display: flex; gap: 10px; }
-.legend { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 13px; color: var(--muted); }
-.legend span { display: inline-flex; align-items: center; gap: 6px; }
-.legend i { width: 14px; height: 14px; border-radius: 4px; display: inline-grid; place-items: center; background: var(--done); }
-.legend i.finish { background: var(--link); }
-.legend i svg { width: 10px; height: 10px; color: #fff; }
-.legend i.finish svg { color: var(--link-ink); }
+/* Box columns line up under the "Logged in" / "Done" headers in each group. */
+.checks { flex: none; display: grid; grid-template-columns: 64px 44px; justify-items: center; }
+.checks .check { width: 24px; }
 .name { flex: 1; min-width: 0; padding: 14px 0; color: var(--ink); text-decoration: none; overflow-wrap: anywhere; }
 a.name:hover { color: var(--link); text-decoration: underline; text-underline-offset: 3px; }
 a.name:active { opacity: .7; }
@@ -161,10 +159,6 @@ body { margin: 0; }
         <button data-filter="todo" aria-pressed="false">Not logged in</button>
         <button data-filter="done" aria-pressed="false">Logged in</button>
       </div>
-      <div class="legend" aria-hidden="true">
-        <span><i class="login-key"></i>Logged into portal</span>
-        <span><i class="finish"></i>Finished everything in portal</span>
-      </div>
     </div>
 
     <main id="list">
@@ -217,8 +211,6 @@ let editingId = null, draft = null, removeArmed = false, focusEditor = false;
 
 const CHECK_SVG = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg>';
 const FLAG_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4"/><path d="M5 4h12l-2.5 4.5L17 13H5" fill="currentColor"/></svg>';
-document.querySelector(".legend i.login-key").innerHTML = CHECK_SVG;
-document.querySelector(".legend i.finish").innerHTML = FLAG_SVG;
 
 function rowHtml(c) {
   if (c.id === editingId) return editorHtml(c);
@@ -266,7 +258,7 @@ function render() {
   let html = "";
   for (const [tier, label] of TIERS) {
     const list = shown.filter((c) => (c.tier || "other") === tier);
-    if (list.length) html += `<section class="group"><h2>${label}</h2><ul class="rows">${list.map(rowHtml).join("")}</ul></section>`;
+    if (list.length) html += `<section class="group"><div class="group-head"><div class="cols" aria-hidden="true"><span>Logged in</span><span>Done</span></div><h2>${label}</h2></div><ul class="rows">${list.map(rowHtml).join("")}</ul></section>`;
   }
   const emptyMsg = !loaded ? "Loading your colleges…" : !total ? "No colleges yet. Search above to add your first one." : filter === "todo" ? "You've logged into every portal." : filter === "applied" ? "No colleges marked as applied yet. Tap Edit on a school and tick \"I've applied.\"" : "None yet.";
   $("list").innerHTML = html || `<p class="empty">${esc(emptyMsg)}</p>`;
